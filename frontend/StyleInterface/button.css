@@ -1,0 +1,20 @@
+button {
+    border: none;
+    border-radius: 10px;
+    padding: 10px;
+    cursor: pointer;
+}
+
+.btn-blue {
+    background-color: #9f9fff;
+    color: white;
+}
+
+.btn-red {
+    background-color: #ff5454;
+    color: white;
+}
+
+.btn-disabled {
+    background-color: #cecece;
+}

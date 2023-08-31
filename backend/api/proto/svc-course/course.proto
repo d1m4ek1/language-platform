@@ -1,0 +1,145 @@
+syntax = "proto3";
+
+package course;
+
+option go_package = "./api/proto/svc-course";
+
+service CourseService {
+  rpc CreateCourse(CreateCourseRequest) returns (CreateCourseResponse) {}
+  rpc AddLessonToCreatedCourse(AddLessonRequest) returns (AddLessonResponse) {}
+  rpc SetFileForCourse(FileForCourseRequest) returns (FileForCourseResponse) {}
+
+  rpc GetListOfCourses(ListOfCoursesRequest) returns (ListOfCoursesResponse) {}
+  rpc GetCourseByID(CourseDataRequest) returns (CourseDataResponse) {}
+
+  rpc SaveCourse(CreateCourseRequest) returns (CreateCourseResponse) {}
+  rpc SaveLessons(AddLessonRequest) returns (AddLessonResponse) {}
+}
+
+message CourseDataRequest {
+  int64 courseId = 1;
+}
+
+message CourseDataResponse {
+  CreateCourseRequest courseData = 1;
+  repeated LessonItems lessonDataItems = 2;
+  int64 status = 3;
+  string error = 4;
+}
+
+message CreateCourseRequest {
+  int64 userId = 1;
+  string name = 2;
+  string language = 3;
+  bool hidden = 4;
+  string description = 5;
+  int64 price = 6;
+  string mainImg = 7;
+  string mainVideo = 8;
+  int64 courseId = 9;
+}
+
+message CreateCourseResponse {
+  int64 courseId = 1;
+  int64 status = 2;
+  string error = 3;
+}
+
+message AddLessonRequest {
+  int64 userId = 1;
+  int64 courseId = 2;
+  repeated LessonItems lessonItems = 3;
+  repeated DeleteLessonFileItems deleteLessonFileItems = 4;
+  repeated int64 deleteLessonItems = 5;
+}
+
+message DeleteLessonFileItems {
+  int64 lessonId = 1;
+  repeated string paths = 2;
+}
+
+message LessonItems {
+  int64 id = 1;
+  string name = 2;
+  int64 deadline = 3;
+  string taskDescription = 4;
+  int64 lessonNumber = 5;
+  repeated ExerciseItems exerciseItems = 6;
+  string exerciseJson = 7;
+  map<string, string> deleteFiles = 8;
+}
+
+message ExerciseItems {
+  string type = 1;
+  string name = 2;
+  string path = 3;
+  string taskDescription = 4;
+  int64 exerciseNumber = 5;
+  Task task = 6;
+}
+
+message Task {
+  string type = 1;
+  repeated CorrectAnswer correctAnswer = 2;
+  ExpandBrackets expandBrackets = 3;
+
+  message CorrectAnswer {
+    int64 id = 1;
+    string phrase = 2;
+    bool answer = 3;
+  }
+
+  message ExpandBrackets {
+    string text = 1;
+    repeated AnswerItems answerItems = 2;
+
+    message AnswerItems {
+      int64 id = 1;
+      string answer = 2;
+    }
+  }
+}
+
+message AddLessonResponse {
+  int64 status = 1;
+  string error = 2;
+}
+
+message FileForCourseRequest {
+  int64 courseId = 1;
+  int64 userId = 2;
+  repeated File fileItems = 3;
+
+  message File {
+    string path = 1;
+    string typeFile = 2;
+  }
+}
+
+message FileForCourseResponse {
+  int64 status = 1;
+  string error = 2;
+}
+
+message ListOfCoursesRequest {
+  int64 userID = 1;
+}
+
+message ListOfCoursesResponse {
+  repeated CourseData courseData = 1;
+  int64 status = 2;
+  string error = 3;
+
+  message CourseData {
+    int64 courseID = 1;
+    string name = 2;
+    string language = 3;
+    bool hidden = 4;
+    string description = 5;
+    int64 price = 6;
+    string mainImage = 7;
+    string mainVideo = 8;
+    string createdDate = 9;
+    string editingDate = 10;
+  }
+}

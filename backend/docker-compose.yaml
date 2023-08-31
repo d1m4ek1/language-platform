@@ -1,0 +1,21 @@
+version: "3"
+
+services:
+  database:
+    image: postgres
+    env_file:
+      - db.env
+    volumes:
+      - ./database:/var/lib/postgresql/data
+    ports:
+      - "6432:5432"
+
+  auth-svc:
+    build:
+      context: .
+      dockerfile: docker/auth/Dockerfile
+    hostname: language_server
+    ports:
+      - "50051:50051"
+    environment:
+      WAIT_HOSTS: database:5432

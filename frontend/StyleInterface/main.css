@@ -1,0 +1,39 @@
+@import "button.css";
+@import "inputs.css";
+@import "error.css";
+@import "component.css";
+@import "header.css";
+@import "ui.css";
+@import "task.css";
+
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+/*body {*/
+/*    background-color: #5f5f5f;*/
+/*}*/
+
+ul {
+    list-style: none;
+}
+
+a {
+    color: #6c6cff;
+    text-decoration: none;
+}
+
+.container {
+    padding: 0 50px;
+}
+
+.main {
+    margin-top: 100px;
+}
+
+.main h1 {
+    margin-bottom: 40px;
+}

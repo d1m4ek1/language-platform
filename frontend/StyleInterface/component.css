@@ -1,0 +1,39 @@
+.component-router-loader {
+    margin-left: 230px;
+    margin-right: 30px;
+    margin-top: 20px;
+}
+
+.component {
+    padding: 20px 10px 20px 10px;
+    border-radius: 10px;
+}
+
+.component-content {
+
+}
+
+.component > section:not(:first-child) {
+    margin-top: 30px;
+}
+
+.component-block-input > div:not(:first-child) {
+    margin-top: 20px;
+}
+
+.component-block-input > .data-input > .input {
+    width: 100%;
+}
+
+.component-block-input > .data-input > .block_checkbox {
+    width: max-content;
+}
+
+.data-input > div {
+    margin: 5px 0;
+}
+
+.create-lessons > button {
+    font-size: 16px;
+    width: 100%;
+}

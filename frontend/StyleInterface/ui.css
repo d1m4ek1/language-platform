@@ -1,0 +1,19 @@
+.span-plus {
+    background-color: #9090ff;
+    font-weight: bold;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.link {
+    cursor: pointer;
+    color: #6161ff;
+}
+
+.underline {
+    text-decoration: underline;
+}

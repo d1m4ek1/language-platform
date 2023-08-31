@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package client;
+
+option go_package = "./api/proto/svc-client";
+
+service ClientService {
+  rpc GetDataClient (GetDataClientRequest) returns (GetDataClientResponse) {}
+
+  rpc SaveDataClient (SaveDataClientRequest) returns (SaveDataClientResponse) {}
+}
+
+message GetDataClientRequest {
+  int64 userId = 1;
+}
+
+message GetDataClientResponse {
+  DataClient dataClient = 1;
+  ResponseStatus responseStatus = 2;
+}
+
+message SaveDataClientRequest {
+    DataClient dataClient = 1;
+}
+
+message SaveDataClientResponse {
+    ResponseStatus responseStatus = 1;
+}
+
+message DataClient {
+  int64 userId = 1;
+  string firstName = 2;
+  string lastName = 3;
+  string regDate = 4;
+  repeated LanguageItems languageItems = 5;
+  string aboutMe = 6;
+  string avatar = 7;
+  string deleteAvatar = 8;
+  string interfaceLang = 9;
+  bool isTeacher = 10;
+}
+
+message LanguageItems {
+  string lang = 1;
+  string lvl = 2;
+}
+
+message ResponseStatus {
+  int64 status = 1;
+  string error = 2;
+}
