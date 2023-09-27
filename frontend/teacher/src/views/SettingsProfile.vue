@@ -1,6 +1,7 @@
 <template>
   <div class='component'>
-    <section class='title'>
+    <section class='component-content'>
+      <h2>Настройки профиля</h2>
       <figure class='block-avatar'>
         <div class='control-avatar'>
           <FileLoader :edit-preview='dataSettings.avatar' :id-for='"file_loader_avatar"' :name-form-data='"avatar"'
@@ -16,8 +17,6 @@
           <p>Дата регистрации: {{ store.getDate }}</p>
         </figcaption>
       </figure>
-    </section>
-    <section class='component-content'>
       <div class='about-me'>
         <h3>О себе</h3>
         <div class='contenteditable' contenteditable='true' @input='setAboutMe'
@@ -58,6 +57,20 @@
           <option disabled value='en'>Английский</option>
         </select>
       </div>
+    </section>
+    <section class='component-content'>
+      <h2>Токен регистрации</h2>
+      <div class='reg-token-block'>
+        <p v-if='!dataSettings.registrationToken'>Токен будет действителен 1 месяц</p>
+        <p v-else>{{ store.getFullCreatedAndDeadlineDateRegToken }}</p>
+        <div class='reg-token-input'>
+          <input v-if='!dataSettings.registrationToken.regToken' class='input' placeholder='Ваш токен не сгенерирован' readonly/>
+          <input v-else v-model='dataSettings.registrationToken.regToken' class='input' readonly />
+          <button class='btn-blue' @click='generateToken'>Сгенерировать токен регистрации</button>
+        </div>
+      </div>
+    </section>
+    <section class='component-content'>
       <div class='save-data-settings'>
         <h3>Сохранить изменения</h3>
         <button class='btn-blue' @click='saveDataSettings'>Сохранить</button>
@@ -85,7 +98,12 @@ const dataSettings = ref({
   interfaceLang: '',
   avatar: '',
   deleteAvatar: '',
-  isTeacher: null
+  isTeacher: null,
+  registrationToken: {
+    regToken: '',
+    createdDate: '',
+    deadlineDate: ''
+  }
 });
 const selectOptionsLang = ref([
   {
@@ -118,10 +136,20 @@ watch(isGetDataClient, (n) => {
       interfaceLang: store.dataClient.interfaceLang,
       avatar: store.dataClient.avatar,
       deleteAvatar: '',
-      isTeacher: store.dataClient.isTeacher
+      isTeacher: store.dataClient.isTeacher,
+      registrationToken: store.dataClient.registrationToken
     };
   }
 }, { immediate: true });
+
+function generateToken() {
+  let chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let token = '';
+  for(let i = 1; i <= 60; i++) {
+    token += chars[Math.floor(Math.random() * chars.length)];
+  }
+  dataSettings.value.registrationToken.regToken = `reg_${token}`
+}
 
 function onUploadFile(data) {
   if (data.remove) {
@@ -236,7 +264,11 @@ figcaption > p:last-child {
   color: #c7c7c7;
 }
 
-.component-content > div:not(:last-child) {
+.component-content > h2 {
+  margin-bottom: 30px;
+}
+
+.component-content > div:not(:last-child), .component-content > figure {
   margin-bottom: 20px;
 }
 
@@ -283,5 +315,14 @@ figcaption > p:last-child {
 
 .list-select > select {
   width: 200px;
+}
+
+.reg-token-input {
+  display: flex;
+  flex-direction: column;
+  margin-top: 20px;
+}
+.reg-token-input > .input {
+  margin-bottom: 20px;
 }
 </style>

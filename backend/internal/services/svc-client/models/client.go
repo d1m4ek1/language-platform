@@ -10,15 +10,22 @@ import (
 )
 
 type DataClient struct {
-	UserID        int64           `db:"id"`
-	FirstName     string          `json:"firstName" db:"first_name"`
-	LastName      string          `json:"lastName" db:"last_name"`
-	RegDate       string          `json:"regDate" db:"reg_date"`
-	LanguageItems []LanguageItems `json:"languageItems" db:"language_items"`
-	AboutMe       string          `json:"aboutMe" db:"about_me"`
-	IsTeacher     bool            `json:"isTeacher" db:"teacher"`
-	InterfaceLang string          `json:"interfaceLang" db:"interface_lang"`
-	Avatar        string
+	UserID            int64             `db:"id"`
+	FirstName         string            `json:"firstName" db:"first_name"`
+	LastName          string            `json:"lastName" db:"last_name"`
+	RegDate           string            `json:"regDate" db:"reg_date"`
+	LanguageItems     []LanguageItems   `json:"languageItems" db:"language_items"`
+	AboutMe           string            `json:"aboutMe" db:"about_me"`
+	IsTeacher         bool              `json:"isTeacher" db:"teacher"`
+	InterfaceLang     string            `json:"interfaceLang" db:"interface_lang"`
+	RegistrationToken RegistrationToken `json:"registrationToken"`
+	Avatar            string
+}
+
+type RegistrationToken struct {
+	RegToken     string `json:"regToken" db:"token"`
+	CreatedDate  string `json:"createdDate" db:"created_date"`
+	DeadlineDate string `json:"deadlineDate" db:"deadline_date"`
 }
 
 type LanguageItems struct {
@@ -43,6 +50,31 @@ func (d *DataClient) GetDataClient(db *sqlx.DB) (*svc_client.GetDataClientRespon
 	    id=$1`, d.UserID).Scan(&d.FirstName, &d.LastName, &d.RegDate,
 		&d.AboutMe, &d.Avatar, &d.IsTeacher, &d.InterfaceLang, &jsonLanguageItems); err != nil {
 		return res, errorlog.NewError(err.Error())
+	}
+
+	var hasRegTokenColumn bool
+	if err := db.Get(&hasRegTokenColumn, `
+	SELECT exists(
+		select 
+		    * 
+		from 
+		    registration_token 
+		where 
+		    client_id=$1)`, d.UserID); err != nil {
+		return res, errorlog.NewError(err.Error())
+	}
+
+	if hasRegTokenColumn {
+		if err := db.QueryRow(`
+		SELECT 
+			token, created_date, deadline_date
+		FROM
+			registration_token
+		WHERE
+	    client_id=$1`, d.UserID).Scan(&d.RegistrationToken.RegToken, &d.RegistrationToken.CreatedDate,
+			&d.RegistrationToken.DeadlineDate); err != nil {
+			return res, errorlog.NewError(err.Error())
+		}
 	}
 
 	if err := json.Unmarshal(jsonLanguageItems, &d.LanguageItems); err != nil {
@@ -127,7 +159,79 @@ func (d *DataClient) UpdateDataClient(db *sqlx.DB) (*svc_client.SaveDataClientRe
 		return res, errorlog.NewError(err.Error())
 	}
 
+	if err := d.UpdateRegistrationToken(db); err != nil {
+		return res, err
+	}
+
 	return res, nil
+}
+
+func (d *DataClient) UpdateRegistrationToken(db *sqlx.DB) error {
+	var hasRegTokenColumn bool
+	if err := db.Get(&hasRegTokenColumn, `
+	SELECT exists(
+		select 
+		    * 
+		from 
+		    registration_token 
+		where 
+		    client_id=3)`); err != nil {
+		return errorlog.NewError(err.Error())
+	}
+
+	if hasRegTokenColumn {
+		stmt, err := db.Prepare(`
+	UPDATE
+		registration_token
+	SET
+	    token=(
+	        select 
+	            case
+	            	when $1 !='' then $2
+	        	else token
+	        end
+	    ), 
+	    created_date=(
+	        select
+	            case
+	            	when $3 !='' then $4
+	        	else created_date
+	        end
+	    ),
+	    deadline_date=(
+	        select 
+	            case
+	            	when $5 != '' then $6
+	        	else deadline_date
+	        end
+	    )
+	WHERE
+	    client_id=$7`)
+		if err != nil {
+			return errorlog.NewError(err.Error())
+		}
+
+		if _, err := stmt.Exec(d.RegistrationToken.RegToken, d.RegistrationToken.RegToken,
+			d.RegistrationToken.CreatedDate, d.RegistrationToken.CreatedDate, d.RegistrationToken.DeadlineDate,
+			d.RegistrationToken.DeadlineDate, d.UserID); err != nil {
+			return errorlog.NewError(err.Error())
+		}
+	} else {
+		stmt, err := db.Prepare(`
+		INSERT INTO 
+			registration_token (token, created_date, deadline_date, client_id) 
+			VALUES ($1, current_date, current_date + interval '1 month', $2)
+		`)
+		if err != nil {
+			return errorlog.NewError(err.Error())
+		}
+
+		if _, err := stmt.Exec(d.RegistrationToken.RegToken, d.UserID); err != nil {
+			return errorlog.NewError(err.Error())
+		}
+	}
+
+	return nil
 }
 
 func NewDataClient(req *svc_client.DataClient) *DataClient {

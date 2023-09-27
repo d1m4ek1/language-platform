@@ -15,7 +15,12 @@ export const useClient = defineStore('client', {
           'lang': 'en',
           'lvl': 'B1'
         }
-      ]
+      ],
+      registrationToken: {
+        regToken: '',
+        createdDate: '',
+        deadlineDate: ''
+      }
     },
     isGetDataClient: false
   }),
@@ -48,6 +53,26 @@ export const useClient = defineStore('client', {
         month: 'long',
         day: 'numeric'
       });
+    },
+    getFullCreatedAndDeadlineDateRegToken: (state) => {
+      let createdDate = new Date(state.dataClient.registrationToken.createdDate)
+      let deadlineDate = new Date(state.dataClient.registrationToken.deadlineDate)
+
+      if (new Date().getTime() >= deadlineDate.getTime()) {
+        return `Срок действия токена истек`
+      }
+
+      return `Создан: ${createdDate.toLocaleDateString('ru-RU', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })}; Действителен: ${deadlineDate.toLocaleDateString('ru-RU', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })}`
     }
   },
   actions: {

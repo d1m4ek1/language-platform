@@ -5,8 +5,6 @@ import { useClient } from './stores/useClient';
 
 const store = useClient()
 store.sendGetDataClient()
-
-console.log(true)
 </script>
 
 <template>

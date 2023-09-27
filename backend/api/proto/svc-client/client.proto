@@ -38,6 +38,13 @@ message DataClient {
   string deleteAvatar = 8;
   string interfaceLang = 9;
   bool isTeacher = 10;
+  RegistrationToken registrationToken = 11;
+}
+
+message RegistrationToken {
+  string regToken = 1;
+  string createdDate = 2;
+  string deadlineDate = 3;
 }
 
 message LanguageItems {

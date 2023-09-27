@@ -1,25 +1,22 @@
 package models
 
 import (
-	"database/sql"
 	"english/backend/shared/errorlog"
-	"errors"
 	"fmt"
 	"github.com/jmoiron/sqlx"
-	"github.com/lib/pq"
 	"net/http"
 )
 
 type Client struct {
-	Id              int64         `json:"id"`
-	Login           string        `json:"login"`
-	Email           string        `json:"email"`
-	FirstName       string        `json:"firstName" db:"first_name"`
-	LastName        string        `json:"lastName" db:"last_name"`
-	RegToken        string        `json:"reg_token"`
-	Password        string        `json:"password"`
-	IsTeacher       bool          `json:"isTeacher" db:"teacher"`
-	SetSubCourseIDS pq.Int64Array `json:"setSubCourseIDS" db:"set_course_ids"`
+	Id         int64  `json:"id"`
+	Login      string `json:"login"`
+	Email      string `json:"email"`
+	FirstName  string `json:"firstName" db:"first_name"`
+	LastName   string `json:"lastName" db:"last_name"`
+	RegToken   string `json:"reg_token"`
+	Password   string `json:"password"`
+	IsTeacher  bool   `json:"isTeacher" db:"teacher"`
+	SubTeacher int    `json:"subTeacher" db:"sub_teacher"`
 }
 
 func (u *Client) GetClient(db *sqlx.DB) (int, error) {
@@ -66,14 +63,17 @@ func (u *Client) CheckHaveClientByLoginAndEmail(db *sqlx.DB) (string, int, error
 }
 
 func (u *Client) CheckRegToken(db *sqlx.DB) (bool, int, error) {
-	if err := db.Get(&u.SetSubCourseIDS, `
-	SELECT set_course_ids FROM registration_token WHERE token=$1`, u.RegToken); errors.Is(err, sql.ErrNoRows) {
-		return false, http.StatusOK, nil
-	} else if err != nil {
+	if err := db.Get(&u.SubTeacher, `
+	SELECT 
+	case
+		when exists(select token FROM registration_token WHERE token=$1) = true 
+	    then (select client_id from registration_token WHERE token=$2)
+		else 0
+	end`, u.RegToken, u.RegToken); err != nil {
 		return false, http.StatusInternalServerError, errorlog.NewError(err.Error())
 	}
 
-	return true, http.StatusOK, nil
+	return !(u.SubTeacher == 0), http.StatusOK, nil
 }
 
 func (u *Client) InsertClient(db *sqlx.DB) (int, error) {
@@ -103,14 +103,24 @@ func (u *Client) insertClientInfo(db *sqlx.DB) error {
 	stmt, err := db.PrepareNamed(`
 	INSERT INTO 
 		client_info
-		(id, first_name, last_name, sub_course_ids)
+		(id, first_name, last_name, sub_teacher)
 	VALUES 
-	    (:id, :first_name, :last_name, :set_course_ids)`)
+	    (:id, :first_name, :last_name, :sub_teacher)`)
 	if err != nil {
 		return err
 	}
 
 	if _, err := stmt.Exec(u); err != nil {
+		return err
+	}
+
+	if _, err := db.NamedExec(`
+	UPDATE 
+		client_info
+	SET
+	    sub_students=array_append(sub_students, :id)
+	WHERE 
+	    id=:sub_teacher`, u); err != nil {
 		return err
 	}
 

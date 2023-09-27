@@ -18,6 +18,12 @@ coverage
 /cypress/videos/
 /cypress/screenshots/
 
+/backend/bin
+/backend/web/student
+/backend/web/teacher
+/backend/schema/*.sql
+/backend/database
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
