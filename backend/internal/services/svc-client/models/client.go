@@ -4,9 +4,12 @@ import (
 	"encoding/json"
 	svc_client "english/backend/api/proto/svc-client"
 	"english/backend/shared/errorlog"
+	"fmt"
 	"github.com/jinzhu/copier"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 	"net/http"
+	"strings"
 )
 
 type DataClient struct {
@@ -19,7 +22,16 @@ type DataClient struct {
 	IsTeacher         bool              `json:"isTeacher" db:"teacher"`
 	InterfaceLang     string            `json:"interfaceLang" db:"interface_lang"`
 	RegistrationToken RegistrationToken `json:"registrationToken"`
+	SubStudentsNums   pq.Int64Array     `json:"-" db:"sub_students"`
+	SubStudents       []SubStudents     `json:"subStudents"`
 	Avatar            string
+}
+
+type SubStudents struct {
+	Id        int64  `json:"id"`
+	Avatar    string `json:"avatar" db:"avatar"`
+	FirstName string `json:"firstName" db:"first_name"`
+	LastName  string `json:"lastName" db:"last_name"`
 }
 
 type RegistrationToken struct {
@@ -33,6 +45,24 @@ type LanguageItems struct {
 	Lvl  string `json:"lvl"`
 }
 
+func (d *DataClient) GetDataSubStudents(db *sqlx.DB) error {
+	idClients := make([]string, len(d.SubStudentsNums))
+	for i, num := range d.SubStudentsNums {
+		idClients[i] = fmt.Sprintf("id=%d", num)
+	}
+
+	if err := db.Select(&d.SubStudents, fmt.Sprintf(`
+	SELECT 
+	    id, avatar, first_name, last_name 
+	FROM 
+	    client_info
+	WHERE %s`, strings.Join(idClients, " OR "))); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (d *DataClient) GetDataClient(db *sqlx.DB) (*svc_client.GetDataClientResponse, error) {
 	res := &svc_client.GetDataClientResponse{
 		ResponseStatus: &svc_client.ResponseStatus{
@@ -43,13 +73,19 @@ func (d *DataClient) GetDataClient(db *sqlx.DB) (*svc_client.GetDataClientRespon
 	var jsonLanguageItems []byte
 	if err := db.QueryRow(`
 	SELECT 
-	    first_name, last_name, reg_date, about_me, avatar, teacher, interface_lang, language_items
+	    first_name, last_name, reg_date, about_me, avatar, teacher, interface_lang, language_items, sub_students
 	FROM
 		client_info
 	WHERE
 	    id=$1`, d.UserID).Scan(&d.FirstName, &d.LastName, &d.RegDate,
-		&d.AboutMe, &d.Avatar, &d.IsTeacher, &d.InterfaceLang, &jsonLanguageItems); err != nil {
+		&d.AboutMe, &d.Avatar, &d.IsTeacher, &d.InterfaceLang, &jsonLanguageItems, &d.SubStudentsNums); err != nil {
 		return res, errorlog.NewError(err.Error())
+	}
+
+	if d.SubStudentsNums != nil {
+		if err := d.GetDataSubStudents(db); err != nil {
+			return res, errorlog.NewError(err.Error())
+		}
 	}
 
 	var hasRegTokenColumn bool

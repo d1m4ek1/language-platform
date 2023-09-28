@@ -25,7 +25,7 @@ async function signout() {
         <li><RouterLink to="/create-course">Создать курс</RouterLink></li>
         <li><RouterLink to='/list-courses'>Список курсов</RouterLink></li>
         <li>Проверка уроков</li>
-        <li>Ученики</li>
+        <li><RouterLink to='/students'>Ученики</RouterLink></li>
         <li><RouterLink to='/profile'>Профиль</RouterLink></li>
         <li><RouterLink to='/profile/settings'>Настройки</RouterLink></li>
         <li><a class='btn-signout' href='#' @click='signout()'>Выйти</a></li>

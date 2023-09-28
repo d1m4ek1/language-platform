@@ -2,41 +2,41 @@ package teacher
 
 import (
 	"english/backend/config"
-	auth2 "english/backend/internal/services/main/services/auth"
-	routes2 "english/backend/internal/services/main/services/teacher/routes"
+	"english/backend/internal/services/main/services/auth"
+	"english/backend/internal/services/main/services/teacher/routes"
 	"github.com/gin-gonic/gin"
 )
 
 func (svc *ServiceClient) SaveLessons(ctx *gin.Context) {
-	routes2.SaveLessons(ctx, svc.Client)
+	routes.SaveLessons(ctx, svc.Client)
 }
 
 func (svc *ServiceClient) SaveCourse(ctx *gin.Context) {
-	routes2.SaveCourse(ctx, svc.Client)
+	routes.SaveCourse(ctx, svc.Client)
 }
 
 func (svc *ServiceClient) GetCourseByID(ctx *gin.Context) {
-	routes2.GetCourseByID(ctx, svc.Client)
+	routes.GetCourseByID(ctx, svc.Client)
 }
 
 func (svc *ServiceClient) GetListOfCourses(ctx *gin.Context) {
-	routes2.GetListOfCourses(ctx, svc.Client)
+	routes.GetListOfCourses(ctx, svc.Client)
 }
 
 func (svc *ServiceClient) AddLessonToCreatedCourse(ctx *gin.Context) {
-	routes2.AddLessonToCreatedCourse(ctx, svc.Client)
+	routes.AddLessonToCreatedCourse(ctx, svc.Client)
 }
 
 func (svc *ServiceClient) CreateCourse(ctx *gin.Context) {
-	routes2.CreateCourse(ctx, svc.Client)
+	routes.CreateCourse(ctx, svc.Client)
 }
 
 func (svc *ServiceClient) UploadFileCourse(ctx *gin.Context) {
-	routes2.UploadFileCourse(ctx, svc.Client)
+	routes.UploadFileCourse(ctx, svc.Client)
 }
 
-func RegisterRoutes(engine *gin.Engine, authService *auth2.ServiceClient, cfg *config.MainConfig) {
-	a := auth2.InitAuthMiddleware(authService)
+func RegisterRoutes(engine *gin.Engine, authService *auth.ServiceClient, cfg *config.MainConfig) {
+	a := auth.InitAuthMiddleware(authService)
 
 	svc := &ServiceClient{
 		Client: InitServiceClient(cfg),
@@ -46,12 +46,13 @@ func RegisterRoutes(engine *gin.Engine, authService *auth2.ServiceClient, cfg *c
 	teacher.Use(a.AuthRequired)
 	teacher.Use(a.AuthValidateClient)
 	{
-		teacher.GET("", routes2.TeacherPageApplication)
-		teacher.GET("/create-course", routes2.TeacherPageApplication)
-		teacher.GET("/list-courses", routes2.TeacherPageApplication)
-		teacher.GET("/check-lessons", routes2.TeacherPageApplication)
-		teacher.GET("/profile", routes2.TeacherPageApplication)
-		teacher.GET("/profile/settings", routes2.TeacherPageApplication)
+		teacher.GET("", routes.TeacherPageApplication)
+		teacher.GET("/create-course", routes.TeacherPageApplication)
+		teacher.GET("/list-courses", routes.TeacherPageApplication)
+		teacher.GET("/check-lessons", routes.TeacherPageApplication)
+		teacher.GET("/students", routes.TeacherPageApplication)
+		teacher.GET("/profile", routes.TeacherPageApplication)
+		teacher.GET("/profile/settings", routes.TeacherPageApplication)
 
 		//create course
 		teacher.POST("create-course", svc.CreateCourse)

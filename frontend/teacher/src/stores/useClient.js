@@ -20,7 +20,8 @@ export const useClient = defineStore('client', {
         regToken: '',
         createdDate: '',
         deadlineDate: ''
-      }
+      },
+      subStudents: []
     },
     isGetDataClient: false
   }),
@@ -103,6 +104,6 @@ export const useClient = defineStore('client', {
       } catch (err) {
         console.error(err);
       }
-    }
+    },
   }
 });

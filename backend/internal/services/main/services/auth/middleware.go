@@ -64,12 +64,14 @@ func (a *AuthMiddlewareConfig) AuthValidateClient(ctx *gin.Context) {
 	isTeacher, _ := ctx.Get("isTeacher")
 
 	if isTeacher == false {
-		if strings.Contains(ctx.Request.URL.Path, "teacher") {
+		validateWordInPath := strings.Split(ctx.Request.URL.Path[1:], "/")[0]
+		if validateWordInPath == "teacher" {
 			ctx.Redirect(http.StatusSeeOther, "/student")
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 		}
 	} else {
-		if strings.Contains(ctx.Request.URL.Path, "student") {
+		validateWordInPath := strings.Split(ctx.Request.URL.Path[1:], "/")[0]
+		if validateWordInPath == "student" {
 			ctx.Redirect(http.StatusSeeOther, "/teacher")
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 		}

@@ -39,6 +39,14 @@ message DataClient {
   string interfaceLang = 9;
   bool isTeacher = 10;
   RegistrationToken registrationToken = 11;
+  repeated SubStudents subStudents = 12;
+}
+
+message SubStudents {
+  int64 id = 1;
+  string avatar = 2;
+  string firstName = 3;
+  string lastName = 4;
 }
 
 message RegistrationToken {
