@@ -5,9 +5,9 @@ const def = "/default/avatar/1.png"
 </script>
 
 <template>
-  <div class='course-block'>
-    <section class='course-block-header'>
-      <h2>Name course</h2>
+  <div class='module-block'>
+    <section class='module-block-header'>
+      <h2>Name module</h2>
       <div class='teacher-info'>
         <div class='img'>
           <img :src='def' alt='avatar'>
@@ -15,7 +15,7 @@ const def = "/default/avatar/1.png"
         <p>Teacher Name</p>
       </div>
     </section>
-    <section class='course-block-content'>
+    <section class='module-block-content'>
       <p>Список уроков</p>
       <ul class='lesson-items'>
         <LessonItem v-for='_ in 10'/>
@@ -25,7 +25,7 @@ const def = "/default/avatar/1.png"
 </template>
 
 <style scoped>
-.course-block {
+.module-block {
   width: 500px;
   height: 500px;
   display: flex;
@@ -34,13 +34,13 @@ const def = "/default/avatar/1.png"
   border: 1px solid #b5b5b5;
   overflow: hidden;
 }
-.course-block-header {
+.module-block-header {
   background-color: #dbe8ff;
   width: 100%;
   height: 80px;
   padding: 10px;
 }
-.course-block-header > h1 {
+.module-block-header > h1 {
   margin-bottom: 10px;
 }
 .teacher-info {
@@ -61,14 +61,14 @@ const def = "/default/avatar/1.png"
   height: 100%;
 }
 
-.course-block-content {
+.module-block-content {
   height: 84%;
   padding: 10px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 }
-.course-block-content > p {
+.module-block-content > p {
   margin-bottom: 10px;
 }
 .lesson-items {

@@ -1,7 +1,7 @@
 package models
 
 import (
-	svccourse "english/backend/api/proto/svc-course"
+	svccourse "english/backend/api/proto/svc-module"
 	"english/backend/shared/errorlog"
 	"github.com/jmoiron/sqlx"
 	"net/http"

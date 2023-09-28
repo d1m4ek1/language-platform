@@ -12,16 +12,16 @@ export const useCourse = defineStore('course', {
     lessonItems: [],
     deleteLessonFileItems: [],
     deleteLessonItems: [],
+    subStudents: [],
   }),
   actions: {
     validateMainInfoCourse() {
-      if (this.name === '') return  { error: 'Укажите название курса' };
-      if (this.language === '') return  { error: 'Укажите язык курса' };
-      if (!this.free && this.price === 0) return  { error: 'Укажите цену курса или установите его бесплатным' };
+      if (this.name === '') throw  { error: 'Укажите название курса' };
+      if (this.language === '') throw  { error: 'Укажите язык курса' };
+      if (!this.free && this.price === 0) throw  { error: 'Укажите цену курса или установите его бесплатным' };
     },
     async sendSaveCourse(deleteFiles) {
-      let error = this.validateMainInfoCourse()
-      if (error) throw error
+      this.validateMainInfoCourse()
 
       for (let i = 0; i < this.lessonItems.length; i++) {
         const item = this.lessonItems[i];
@@ -40,7 +40,8 @@ export const useCourse = defineStore('course', {
             language: this.language,
             hidden: this.hidden,
             description: this.description,
-            price: this.free ? 0 : this.price
+            price: this.free ? 0 : this.price,
+            subStudents: this.subStudents
           }
         })
       })
@@ -63,8 +64,7 @@ export const useCourse = defineStore('course', {
       });
     },
     async sendCreateCourse() {
-      let error = this.validateMainInfoCourse()
-      if (error) throw error
+      this.validateMainInfoCourse()
 
       for (let i = 0; i < this.lessonItems.length; i++) {
         const item = this.lessonItems[i];
@@ -80,7 +80,8 @@ export const useCourse = defineStore('course', {
           language: this.language,
           hidden: this.hidden,
           description: this.description,
-          price: this.free ? 0 : this.price
+          price: this.free ? 0 : this.price,
+          subStudents: this.subStudents
         })
       });
     },

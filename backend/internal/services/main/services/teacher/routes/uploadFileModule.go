@@ -3,7 +3,7 @@ package routes
 import (
 	"context"
 	"encoding/json"
-	svccourse "english/backend/api/proto/svc-course"
+	svcmodule "english/backend/api/proto/svc-module"
 	"english/backend/shared/errorlog"
 	"english/backend/shared/uploads"
 	"errors"
@@ -14,8 +14,8 @@ import (
 	"strings"
 )
 
-func uploadMainImage(ctx *gin.Context, c svccourse.CourseServiceClient) (int, error) {
-	courseId, err := strconv.Atoi(ctx.Query("course_id"))
+func uploadMainImage(ctx *gin.Context, c svcmodule.ModuleServiceClient) (int, error) {
+	moduleId, err := strconv.Atoi(ctx.Query("module_id"))
 	if err != nil {
 		return http.StatusBadRequest, errorlog.NewError(err.Error())
 	}
@@ -24,9 +24,9 @@ func uploadMainImage(ctx *gin.Context, c svccourse.CourseServiceClient) (int, er
 
 	form, _ := ctx.MultipartForm()
 	files := form.File["mainFile"]
-	fileForCourseRequest := &svccourse.FileForCourseRequest{
+	fileForModuleRequest := &svcmodule.FileForModuleRequest{
 		UserId:   userId.(int64),
-		CourseId: int64(courseId),
+		ModuleId: int64(moduleId),
 	}
 
 	for _, file := range files {
@@ -47,24 +47,24 @@ func uploadMainImage(ctx *gin.Context, c svccourse.CourseServiceClient) (int, er
 			return http.StatusOK, uploads.ErrorFileIsNotSupported
 		}
 
-		resultPath, status, err := uploads.UploadMainFileCourse(uploads.UploadData{
+		resultPath, status, err := uploads.UploadMainFileModule(uploads.UploadData{
 			File:         file,
 			UserID:       userId.(int64),
 			IsTeacher:    isTeacher.(bool),
-			CourseID:     courseId,
+			ModuleID:     moduleId,
 			FormFileName: contentType,
 		})
 		if err != nil {
 			return status, err
 		}
 
-		fileForCourseRequest.FileItems = append(fileForCourseRequest.FileItems, &svccourse.FileForCourseRequest_File{
+		fileForModuleRequest.FileItems = append(fileForModuleRequest.FileItems, &svcmodule.FileForModuleRequest_File{
 			TypeFile: contentType,
 			Path:     resultPath,
 		})
 	}
 
-	response, err := c.SetFileForCourse(context.Background(), fileForCourseRequest)
+	response, err := c.SetFileForModule(context.Background(), fileForModuleRequest)
 	if err != nil {
 		return int(response.Status), err
 	}
@@ -89,7 +89,7 @@ func containHeaderContentType(headerContentType string) string {
 }
 
 func uploadLessonFiles(ctx *gin.Context) (map[int]string, int, error) {
-	courseId, err := strconv.Atoi(ctx.Query("course_id"))
+	moduleId, err := strconv.Atoi(ctx.Query("module_id"))
 	if err != nil {
 		return nil, http.StatusBadRequest, errorlog.NewError(err.Error())
 	}
@@ -123,11 +123,11 @@ func uploadLessonFiles(ctx *gin.Context) (map[int]string, int, error) {
 				return nil, http.StatusOK, uploads.ErrorFileIsNotSupported
 			}
 
-			resultPath, status, err := uploads.UploadLessonFileCourse(uploads.UploadData{
+			resultPath, status, err := uploads.UploadLessonFileModule(uploads.UploadData{
 				File:         file,
 				UserID:       userId.(int64),
 				IsTeacher:    isTeacher.(bool),
-				CourseID:     courseId,
+				ModuleID:     moduleId,
 				FormFileName: contentType,
 				LessonID:     lessonId,
 				ExerciseID:   exerciseId,
@@ -176,7 +176,7 @@ func uploadAvatarFile(ctx *gin.Context) (string, int, error) {
 	return resultPath, http.StatusOK, nil
 }
 
-func uploadMainFilesByUploadType(ctx *gin.Context, c svccourse.CourseServiceClient) {
+func uploadMainFilesByUploadType(ctx *gin.Context, c svcmodule.ModuleServiceClient) {
 	status, err := uploadMainImage(ctx, c)
 	if errors.Is(err, uploads.ErrorFileIsNotSupported) {
 		ctx.JSON(status, gin.H{
@@ -248,7 +248,7 @@ func uploadAvatarByUploadType(ctx *gin.Context) {
 	})
 }
 
-func UploadFileCourse(ctx *gin.Context, c svccourse.CourseServiceClient) {
+func UploadFileModule(ctx *gin.Context, c svcmodule.ModuleServiceClient) {
 	uploadType := ctx.Query("upload_type")
 
 	if uploadType == "main_files" {

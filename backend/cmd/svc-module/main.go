@@ -1,7 +1,7 @@
 package main
 
 import (
-	svccourse "english/backend/api/proto/svc-course"
+	svccourse "english/backend/api/proto/svc-module"
 	"english/backend/config"
 	"english/backend/internal/db"
 	"english/backend/internal/services/svc-course/services"

@@ -1,7 +1,7 @@
 package services
 
 import (
-	svccourse "english/backend/api/proto/svc-course"
+	svccourse "english/backend/api/proto/svc-module"
 	"english/backend/internal/db"
 )
 

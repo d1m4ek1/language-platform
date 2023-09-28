@@ -2,7 +2,7 @@ package routes
 
 import (
 	"context"
-	svccourse "english/backend/api/proto/svc-course"
+	svccourse "english/backend/api/proto/svc-module"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"

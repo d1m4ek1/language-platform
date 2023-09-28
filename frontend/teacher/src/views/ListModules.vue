@@ -1,26 +1,26 @@
 <script setup>
 import { onMounted, ref } from 'vue';
-import { useListCourses } from '../stores/useListCourses';
-import CourseCard from '../components/ListCourses/CourseCard.vue';
-import { useCourse } from '../stores/useCourse';
-import CreateCourse from './CreateCourse.vue';
+import { useListModule } from '../stores/useListModule';
+import ModuleCard from '../components/ListModule/ModuleCard.vue';
+import { useModule } from '../stores/useModule';
+import CreateModule from './CreateModule.vue';
 
-const store = useListCourses();
-const storeCourse = useCourse();
+const store = useListModule();
+const storeModule = useModule();
 
 let list = ref([]);
-let courseId = ref(0);
+let moduleId = ref(0);
 
 onMounted(() => {
   if (
-    store.getListOfCourses === undefined ||
-    store.getListOfCourses.length === 0
+    store.getListOfModules === undefined ||
+    store.getListOfModules.length === 0
   ) {
-    store.sendGetListOfCourses().then((response) => {
-      if (response) list.value = store.listOfCourses;
+    store.sendGetListOfModules().then((response) => {
+      if (response) list.value = store.listOfModules;
     });
   } else {
-    list.value = store.getListOfCourses;
+    list.value = store.getListOfModules;
   }
 });
 
@@ -29,22 +29,22 @@ const isFlagFilter = ref('all');
 function setFlagFilter(param) {
   isFlagFilter.value = param;
   if (
-    store.getListOfCourses !== undefined &&
-    store.getListOfCourses.length !== 0
+    store.getListOfModules !== undefined &&
+    store.getListOfModules.length !== 0
   )
-    filterListOfCourses();
+    filterListOfModules();
 }
 
-function filterListOfCourses() {
-  if (isFlagFilter.value === 'all') list.value = store.getListOfCourses;
+function filterListOfModules() {
+  if (isFlagFilter.value === 'all') list.value = store.getListOfModules;
   if (isFlagFilter.value === 'public')
-    list.value = store.getListOfCourses.filter((i) => !i.hidden);
+    list.value = store.getListOfModules.filter((i) => !i.hidden);
   if (isFlagFilter.value === 'hidden')
-    list.value = store.getListOfCourses.filter((i) => i.hidden);
+    list.value = store.getListOfModules.filter((i) => i.hidden);
 }
 
-function onEditCourse(data) {
-  storeCourse.courseId = data.courseId;
+function onEditModule(data) {
+  storeModule.moduleId = data.moduleId;
   isFlagFilter.value = 'edit';
 }
 </script>
@@ -81,11 +81,11 @@ function onEditCourse(data) {
 
       <div
         v-if="
-          store.getListOfCourses !== undefined &&
-          store.getListOfCourses.length !== 0 &&
+          store.getListOfModules !== undefined &&
+          store.getListOfModules.length !== 0 &&
           isFlagFilter !== 'edit'
         "
-        class="course-list"
+        class="module-list"
       >
         <p v-if="list.length === 0 && isFlagFilter === 'public'">
           У вас нет публичных курсов
@@ -93,20 +93,20 @@ function onEditCourse(data) {
         <p v-if="list.length === 0 && isFlagFilter === 'hidden'">
           У вас нет скрытых курсов
         </p>
-        <div v-for="(item, idx) in list" :key="`course_card_${idx}`">
-          <CourseCard
-            :course-data="item"
-            @on-edit-course="onEditCourse"
-          ></CourseCard>
+        <div v-for="(item, idx) in list" :key="`module_card_${idx}`">
+          <ModuleCard
+            :module-data="item"
+            @on-edit-module="onEditModule"
+          ></ModuleCard>
         </div>
       </div>
-      <div v-else-if="isFlagFilter === 'edit'" class="course-edit">
-        <CreateCourse :is-edit-course="true"></CreateCourse>
+      <div v-else-if="isFlagFilter === 'edit'" class="module-edit">
+        <CreateModule :is-edit-module="true"></CreateModule>
       </div>
-      <div v-else class="course-list">
+      <div v-else class="module-list">
         <p>
           У вас пока нет курсов.
-          <RouterLink to="/teacher/create-course">Создать курс?</RouterLink>
+          <RouterLink to="/create-module">Создать курс?</RouterLink>
         </p>
       </div>
     </section>
@@ -126,7 +126,7 @@ function onEditCourse(data) {
   padding: 0 10px;
 }
 
-.course-list {
+.module-list {
   display: flex;
   flex-wrap: wrap;
 }

@@ -2,7 +2,7 @@ package routes
 
 import (
 	"context"
-	svccourse "english/backend/api/proto/svc-course"
+	svcmodule "english/backend/api/proto/svc-module"
 	"english/backend/shared/errorlog"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -10,8 +10,8 @@ import (
 	"strconv"
 )
 
-func GetCourseByID(ctx *gin.Context, svc svccourse.CourseServiceClient) {
-	courseID, err := strconv.Atoi(ctx.Query("id"))
+func GetModuleByID(ctx *gin.Context, svc svcmodule.ModuleServiceClient) {
+	moduleID, err := strconv.Atoi(ctx.Query("id"))
 	if err != nil {
 		fmt.Println(errorlog.NewError(err.Error()))
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -20,11 +20,11 @@ func GetCourseByID(ctx *gin.Context, svc svccourse.CourseServiceClient) {
 		return
 	}
 
-	body := &svccourse.CourseDataRequest{
-		CourseId: int64(courseID),
+	body := &svcmodule.ModuleDataRequest{
+		ModuleId: int64(moduleID),
 	}
 
-	response, err := svc.GetCourseByID(context.Background(), body)
+	response, err := svc.GetModuleByID(context.Background(), body)
 	if err != nil {
 		fmt.Println(err)
 		ctx.JSON(int(response.Status), gin.H{

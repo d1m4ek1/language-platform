@@ -2,7 +2,7 @@ package routes
 
 import (
 	"context"
-	svccourse "english/backend/api/proto/svc-course"
+	svcmodule "english/backend/api/proto/svc-module"
 	"english/backend/shared/errorlog"
 	"english/backend/shared/uploads"
 	"fmt"
@@ -10,16 +10,16 @@ import (
 	"net/http"
 )
 
-type SaveCourseBodyRequest struct {
+type SaveModuleBodyRequest struct {
 	DeleteFiles map[string]string              `json:"deleteFiles"`
-	Main        *svccourse.CreateCourseRequest `json:"main"`
+	Main        *svcmodule.CreateModuleRequest `json:"main"`
 }
 
-func SaveCourse(ctx *gin.Context, svc svccourse.CourseServiceClient) {
+func SaveModule(ctx *gin.Context, svc svcmodule.ModuleServiceClient) {
 	userID, _ := ctx.Get("userId")
 
-	body := SaveCourseBodyRequest{
-		Main: &svccourse.CreateCourseRequest{
+	body := SaveModuleBodyRequest{
+		Main: &svcmodule.CreateModuleRequest{
 			UserId: userID.(int64),
 		},
 	}
@@ -42,7 +42,7 @@ func SaveCourse(ctx *gin.Context, svc svccourse.CourseServiceClient) {
 		return
 	}
 
-	response, err := svc.SaveCourse(context.Background(), body.Main)
+	response, err := svc.SaveModule(context.Background(), body.Main)
 	if err != nil {
 		fmt.Println(err)
 		ctx.JSON(int(response.Status), gin.H{
@@ -55,9 +55,9 @@ func SaveCourse(ctx *gin.Context, svc svccourse.CourseServiceClient) {
 	ctx.JSON(http.StatusOK, response)
 }
 
-func SaveLessons(ctx *gin.Context, svc svccourse.CourseServiceClient) {
+func SaveLessons(ctx *gin.Context, svc svcmodule.ModuleServiceClient) {
 	userID, _ := ctx.Get("userId")
-	body := &svccourse.AddLessonRequest{
+	body := &svcmodule.AddLessonRequest{
 		UserId: userID.(int64),
 	}
 

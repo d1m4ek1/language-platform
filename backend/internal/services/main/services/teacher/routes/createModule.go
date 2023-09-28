@@ -2,15 +2,15 @@ package routes
 
 import (
 	"context"
-	svccourse "english/backend/api/proto/svc-course"
+	svcmodule "english/backend/api/proto/svc-module"
 	"english/backend/shared/errorlog"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
-func CreateCourse(ctx *gin.Context, c svccourse.CourseServiceClient) {
-	body := svccourse.CreateCourseRequest{}
+func CreateModule(ctx *gin.Context, c svcmodule.ModuleServiceClient) {
+	body := svcmodule.CreateModuleRequest{}
 	userID, _ := ctx.Get("userId")
 	body.UserId = userID.(int64)
 
@@ -22,7 +22,7 @@ func CreateCourse(ctx *gin.Context, c svccourse.CourseServiceClient) {
 		return
 	}
 
-	response, err := c.CreateCourse(context.Background(), &body)
+	response, err := c.CreateModule(context.Background(), &body)
 	if err != nil {
 		fmt.Println(err)
 		ctx.JSON(http.StatusBadGateway, gin.H{
@@ -34,15 +34,14 @@ func CreateCourse(ctx *gin.Context, c svccourse.CourseServiceClient) {
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"success":  true,
-		"error":    "dfdf",
-		"courseId": 1,
+		"moduleId": response.ModuleId,
 	})
 }
 
-func AddLessonToCreatedCourse(ctx *gin.Context, c svccourse.CourseServiceClient) {
+func AddLessonToCreatedModule(ctx *gin.Context, c svcmodule.ModuleServiceClient) {
 	userID, _ := ctx.Get("userId")
 
-	body := svccourse.AddLessonRequest{
+	body := svcmodule.AddLessonRequest{
 		UserId: userID.(int64),
 	}
 
@@ -54,7 +53,7 @@ func AddLessonToCreatedCourse(ctx *gin.Context, c svccourse.CourseServiceClient)
 		return
 	}
 
-	response, err := c.AddLessonToCreatedCourse(context.Background(), &body)
+	response, err := c.AddLessonToCreatedModule(context.Background(), &body)
 	if err != nil {
 		fmt.Println(err)
 		ctx.JSON(http.StatusBadGateway, gin.H{

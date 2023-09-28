@@ -2,34 +2,37 @@ package models
 
 import (
 	"encoding/json"
-	svccourse "english/backend/api/proto/svc-course"
+	svcmodule "english/backend/api/proto/svc-module"
 	"english/backend/shared/errorlog"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 	"net/http"
+	"time"
 )
 
-type Course struct {
-	CourseId    int64  `json:"courseId" db:"id"`
-	UserID      int64  `json:"userId" db:"user_id"`
-	Name        string `json:"name"`
-	Language    string `json:"language"`
-	Hidden      bool   `json:"hidden"`
-	Description string `json:"description" db:"description"`
-	Price       int    `json:"price"`
+type Module struct {
+	ModuleId    int64         `json:"moduleId" db:"id"`
+	UserID      int64         `json:"userId" db:"user_id"`
+	Name        string        `json:"name"`
+	Language    string        `json:"language"`
+	Hidden      bool          `json:"hidden"`
+	Description string        `json:"description" db:"description"`
+	Price       int           `json:"price"`
+	SubStudents pq.Int64Array `json:"subStudents" db:"sub_students"`
 }
 
-type AddLessonToCreateCourse struct {
+type AddLessonToCreateModule struct {
 	UserID            int64         `json:"userId"`
-	CourseID          int64         `json:"courseId"`
+	ModuleID          int64         `json:"moduleId"`
 	LessonItems       []LessonItems `json:"lessonItems"`
 	DeleteLessonItems []int64       `json:"deleteLessonItems"`
 }
 
 type LessonItems struct {
 	Id              int64           `json:"id" db:"id"`
-	CourseID        int             `json:"-" db:"course_id"`
+	ModuleID        int             `json:"-" db:"module_id"`
 	Name            string          `json:"name"`
-	Deadline        int64           `json:"deadline"`
+	DeadlineDate    time.Time       `json:"deadlineDate" db:"deadline_date"`
 	TaskDescription string          `json:"taskDescription" db:"task_description"`
 	LessonNumber    int             `json:"lessonNumber" db:"lesson_number"`
 	ExerciseItems   []ExerciseItems `json:"exerciseItems"`
@@ -66,7 +69,7 @@ type ExpandBracketsAnswerItems struct {
 	Answer string `json:"answer"`
 }
 
-func newExercise(e *svccourse.ExerciseItems) ExerciseItems {
+func newExercise(e *svcmodule.ExerciseItems) ExerciseItems {
 	exercise := ExerciseItems{
 		Name:            e.Name,
 		TaskDescription: e.TaskDescription,
@@ -104,99 +107,111 @@ func newExercise(e *svccourse.ExerciseItems) ExerciseItems {
 	return exercise
 }
 
-func newLesson(l *svccourse.LessonItems) LessonItems {
+func newLesson(l *svcmodule.LessonItems) (LessonItems, error) {
 	lesson := LessonItems{
 		Id:              l.Id,
 		Name:            l.Name,
 		TaskDescription: l.TaskDescription,
-		Deadline:        l.Deadline,
 		LessonNumber:    int(l.LessonNumber),
+	}
+
+	var err error
+	lesson.DeadlineDate, err = time.Parse(time.RFC3339, l.DeadlineDate)
+	if err != nil {
+		return LessonItems{}, errorlog.NewError(err.Error())
 	}
 
 	for _, exerciseItem := range l.ExerciseItems {
 		lesson.ExerciseItems = append(lesson.ExerciseItems, newExercise(exerciseItem))
 	}
 
-	return lesson
+	return lesson, nil
 }
 
-func NewCourse(req *svccourse.CreateCourseRequest) *Course {
-	return &Course{
+func NewModule(req *svcmodule.CreateModuleRequest) *Module {
+	return &Module{
 		UserID:      req.UserId,
 		Name:        req.Name,
 		Language:    req.Language,
 		Hidden:      req.Hidden,
 		Description: req.Description,
 		Price:       int(req.Price),
-		CourseId:    req.CourseId,
+		ModuleId:    req.ModuleId,
+		SubStudents: req.SubStudents,
 	}
 }
 
-func NewAddLessons(req *svccourse.AddLessonRequest) *AddLessonToCreateCourse {
-	l := &AddLessonToCreateCourse{
+func NewAddLessons(req *svcmodule.AddLessonRequest) (*AddLessonToCreateModule, error) {
+	l := &AddLessonToCreateModule{
 		UserID:            req.UserId,
-		CourseID:          req.CourseId,
+		ModuleID:          req.ModuleId,
 		DeleteLessonItems: req.DeleteLessonItems,
 	}
 
 	for _, item := range req.LessonItems {
-		l.LessonItems = append(l.LessonItems, newLesson(item))
+		lesson, err := newLesson(item)
+		if err != nil {
+			return nil, err
+		}
+
+		l.LessonItems = append(l.LessonItems, lesson)
 	}
 
-	return l
+	return l, nil
 }
 
-func (c *Course) InsertCourse(db *sqlx.DB) (int, int, error) {
-	stmtCourse, err := db.PrepareNamed(`
+func (c *Module) InsertModule(db *sqlx.DB) (int, int, error) {
+	stmtModule, err := db.PrepareNamed(`
 	INSERT INTO 
-		course
-		(user_id, name, language, description, hidden, price) 
+		module
+		(user_id, name, language, description, hidden, price, sub_students) 
 	VALUES 
-		(:user_id, :name, :language, :description, :hidden, :price)
+		(:user_id, :name, :language, :description, :hidden, :price, :sub_students)
 	RETURNING id`)
 	if err != nil {
 		return 0, http.StatusInternalServerError, errorlog.NewError(err.Error())
 	}
 
-	var courseID int
-	if err := stmtCourse.Get(&courseID, c); err != nil {
+	var moduleID int
+	if err := stmtModule.Get(&moduleID, c); err != nil {
 		return 0, http.StatusInternalServerError, errorlog.NewError(err.Error())
 	}
 
-	return courseID, http.StatusOK, nil
+	return moduleID, http.StatusOK, nil
 }
 
-func (c *Course) SetCourse(db *sqlx.DB) (int64, int, error) {
-	stmtCourse, err := db.PrepareNamed(`
+func (c *Module) SetModule(db *sqlx.DB) (int64, int, error) {
+	stmtModule, err := db.PrepareNamed(`
 	UPDATE
-		course
+		module
 	SET
 	    name=:name,
 	    language=:language,
 	    description=:description,
 	    hidden=:hidden,
 	    price=:price,
-	    editing_date=current_date
+	    editing_date=current_date,
+	    sub_students=:sub_students
 	WHERE
 	    user_id=:user_id AND id=:id`)
 	if err != nil {
 		return 0, http.StatusInternalServerError, errorlog.NewError(err.Error())
 	}
 
-	if _, err := stmtCourse.Exec(&c); err != nil {
+	if _, err := stmtModule.Exec(&c); err != nil {
 		return 0, http.StatusInternalServerError, errorlog.NewError(err.Error())
 	}
 
-	return c.CourseId, http.StatusOK, nil
+	return c.ModuleId, http.StatusOK, nil
 }
 
-func (a *AddLessonToCreateCourse) AddLessonToCreatedCourse(db *sqlx.DB) (int, error) {
+func (a *AddLessonToCreateModule) AddLessonToCreatedModule(db *sqlx.DB) (int, error) {
 	stmtLesson, err := db.Prepare(`
 	INSERT INTO
 		lesson
-		(course_id, name, exercise, task_description, lesson_number)
+		(module_id, name, exercise, task_description, lesson_number, deadline_date)
 	VALUES
-		($1, $2, $3, $4, $5)`)
+		($1, $2, $3, $4, $5, $6)`)
 	if err != nil {
 		return http.StatusInternalServerError, errorlog.NewError(err.Error())
 	}
@@ -207,7 +222,7 @@ func (a *AddLessonToCreateCourse) AddLessonToCreatedCourse(db *sqlx.DB) (int, er
 			return http.StatusInternalServerError, errorlog.NewError(err.Error())
 		}
 
-		if _, err := stmtLesson.Exec(a.CourseID, item.Name, exercise, item.TaskDescription, item.LessonNumber); err != nil {
+		if _, err := stmtLesson.Exec(a.ModuleID, item.Name, exercise, item.TaskDescription, item.LessonNumber, item.DeadlineDate); err != nil {
 			return http.StatusInternalServerError, errorlog.NewError(err.Error())
 		}
 	}
@@ -215,7 +230,7 @@ func (a *AddLessonToCreateCourse) AddLessonToCreatedCourse(db *sqlx.DB) (int, er
 	return http.StatusOK, nil
 }
 
-func (a *AddLessonToCreateCourse) SetLessons(db *sqlx.DB) (int, error) {
+func (a *AddLessonToCreateModule) SetLessons(db *sqlx.DB) (int, error) {
 	for _, item := range a.DeleteLessonItems {
 		if _, err := db.Exec(`
 		DELETE FROM 
@@ -241,15 +256,16 @@ func (a *AddLessonToCreateCourse) SetLessons(db *sqlx.DB) (int, error) {
 			    exercise=$2,
 			    task_description=$3,
 			    lesson_number=$4,
-			    date_editing=current_date
+			    date_editing=current_date,
+			    deadline_date=$5
 			WHERE
-			    id=$5 AND course_id=$6`)
+			    id=$6 AND module_id=$7`)
 			if err != nil {
 				return http.StatusInternalServerError, errorlog.NewError(err.Error())
 			}
 
 			if _, err := stmt.Exec(item.Name, exercise, item.TaskDescription,
-				item.LessonNumber, item.Id, a.CourseID); err != nil {
+				item.LessonNumber, item.DeadlineDate, item.Id, a.ModuleID); err != nil {
 				return http.StatusInternalServerError, errorlog.NewError(err.Error())
 			}
 
@@ -259,14 +275,14 @@ func (a *AddLessonToCreateCourse) SetLessons(db *sqlx.DB) (int, error) {
 		stmtLesson, err := db.Prepare(`
 		INSERT INTO
 			lesson
-			(course_id, name, exercise, task_description, lesson_number)
+			(module_id, name, exercise, task_description, lesson_number, deadline_date)
 		VALUES
-			($1, $2, $3, $4, $5)`)
+			($1, $2, $3, $4, $5, $6)`)
 		if err != nil {
 			return http.StatusInternalServerError, errorlog.NewError(err.Error())
 		}
 
-		if _, err := stmtLesson.Exec(a.CourseID, item.Name, exercise, item.TaskDescription, item.LessonNumber); err != nil {
+		if _, err := stmtLesson.Exec(a.ModuleID, item.Name, exercise, item.TaskDescription, item.LessonNumber, item.DeadlineDate); err != nil {
 			return http.StatusInternalServerError, errorlog.NewError(err.Error())
 		}
 	}

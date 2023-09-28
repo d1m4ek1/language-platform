@@ -2,8 +2,8 @@ package services
 
 import (
 	"context"
-	svccourse "english/backend/api/proto/svc-course"
-	"english/backend/internal/services/svc-course/models"
+	svccourse "english/backend/api/proto/svc-module"
+	"english/backend/internal/services/svc-module/models"
 	"net/http"
 )
 

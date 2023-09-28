@@ -34,9 +34,10 @@ message CreateCourseRequest {
   bool hidden = 4;
   string description = 5;
   int64 price = 6;
-  string mainImg = 7;
+  string mainImage = 7;
   string mainVideo = 8;
   int64 courseId = 9;
+  repeated int64 subStudents = 10;
 }
 
 message CreateCourseResponse {
@@ -61,7 +62,7 @@ message DeleteLessonFileItems {
 message LessonItems {
   int64 id = 1;
   string name = 2;
-  int64 deadline = 3;
+  string deadlineDate = 3;
   string taskDescription = 4;
   int64 lessonNumber = 5;
   repeated ExerciseItems exerciseItems = 6;
@@ -141,5 +142,6 @@ message ListOfCoursesResponse {
     string mainVideo = 8;
     string createdDate = 9;
     string editingDate = 10;
+    repeated int64 subStudents = 11;
   }
 }
